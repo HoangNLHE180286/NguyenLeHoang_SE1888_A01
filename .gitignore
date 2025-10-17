@@ -1,0 +1,56 @@
+## Build and Solution Files ##
+# Thư mục chứa các file biên dịch
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+*.exe
+*.dll
+*.pdb
+*.suo
+*.user
+*.ncb
+*.aps
+
+---
+
+## Visual Studio Solution Specific Files ##
+# File cài đặt và cấu hình của VS
+*.vspscc
+*.vssscc
+*.userprefs
+*.log
+*.bak
+
+# Thư mục .vs (chứa cài đặt cá nhân, IntelliSense, v.v.)
+.vs/
+
+# Thư mục NuGet (Gói đã tải xuống)
+[Pp]ackages/
+# File Lock của NuGet (chứa đường dẫn tuyệt đối)
+*.nuget.g.props
+*.nuget.g.targets
+
+---
+
+## Temporary and Test Files ##
+# File tạm thời của ReSharper, Rider, v.v.
+_ReSharper*/
+*.tdl
+
+# File tạm thời của Visual Studio Test
+TestResults/
+
+---
+
+## Source Control Files (Nếu không phải Git) ##
+# Bỏ qua các file của Subversion, Mercurial, v.v.
+.svn/
+.hg/
+
+---
+
+## Project Output and Artifacts ##
+# Output khi publish hoặc deploy
+[Pp]ublish/
+[Tt]emp/
