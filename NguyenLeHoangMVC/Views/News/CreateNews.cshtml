@@ -1,0 +1,135 @@
+﻿@model IEnumerable<NguyenLeHoangMVC_DataLayer.Models.NewsArticle>
+
+@{
+    ViewData["Title"] = "News Management";
+}
+
+<h2>News Articles</h2>
+<form asp-action="Index" method="get">
+    <input type="text" name="searchString" placeholder="Search by Title..." value="@ViewBag.CurrentFilter" />
+    <button type="submit">Search</button>
+</form>
+@if (Model != null && Model.Any()) {
+    <table style="border-collapse: collapse; width: 100%; margin-top: 20px;">
+        <thead>
+            <tr style="background-color: #f2f2f2;">
+                <th style="border: 1px solid #ddd; padding: 8px;">Title</th>
+                <th style="border: 1px solid #ddd; padding: 8px;">Headline</th>
+                <th style="border: 1px solid #ddd; padding: 8px;">Status</th>
+                <th style="border: 1px solid #ddd; padding: 8px;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var news in Model) {
+                <tr>
+                    <td style="border: 1px solid #ddd; padding: 8px;">@news.NewsTitle</td>
+                    <td style="border: 1px solid #ddd; padding: 8px;">@news.Headline</td>
+                    <td style="border: 1px solid #ddd; padding: 8px;">@(news.NewsStatus == true ? "Active" : "Inactive")</td>
+                    <td style="border: 1px solid #ddd; padding: 8px;">
+                        <button onclick="editNews('@news.NewsArticleId')" style="color:blue; border: none; background: none; cursor: pointer;">Edit</button> |  <!-- CHANGE: Button trigger Modal Edit (JS onclick). -->
+                        <form asp-action="Delete" asp-route-id="@news.NewsArticleId" method="post" style="display: inline;" onsubmit="return confirm('Are you sure?');">
+                            <button type="submit" style="color:red; border: none; background: none;">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <button onclick="createNews()" style="margin-top: 10px; padding: 5px 10px; background-color: #007bff; color: white; border: none; cursor: pointer;">Create New</button>
+
+    <!-- CHANGE: Button trigger Modal Create (JS onclick). -->
+} else {
+    <p>No news articles found.</p>
+}
+
+<!-- CHANGE: Bootstrap Modal cho Create (popup dialog theo đề). Inline script JS đơn giản. -->
+<div class="modal fade" id="createModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create New News Article</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form asp-action="Create" method="post">
+                <div class="modal-body">
+                    <!-- CHANGE: Form fields tương tự CreateNews.cshtml, validation inline. -->
+                    <div class="mb-3">
+                        <label class="form-label">Title</label>
+                        <input name="NewsTitle" class="form-control" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Headline</label>
+                        <input name="Headline" class="form-control" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Content</label>
+                        <textarea name="NewsContent" class="form-control"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Source</label>
+                        <input name="NewsSource" class="form-control" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Category</label>
+                        <select name="CategoryId" class="form-control" required>
+                            <option value="">Select Category</option>
+                            @foreach (var cat in ViewBag.Categories as IEnumerable<NguyenLeHoangMVC_DataLayer.Models.Category>) {
+                                <option value="@cat.CategoryId">@cat.CategoryName</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- CHANGE: Tương tự Modal cho Edit (id="editModal", load data JS nếu cần nâng cao). -->
+<div class="modal fade" id="editModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit News Article</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form asp-action="Edit" method="post">
+                <div class="modal-body">
+                    <input type="hidden" id="editId" name="NewsArticleId" />
+                    <!-- CHANGE: Fields tương tự Create, load data từ JS onclick. -->
+                    <div class="mb-3">
+                        <label class="form-label">Title</label>
+                        <input id="editTitle" name="NewsTitle" class="form-control" required />
+                    </div>
+                    <!-- Thêm các field khác: Headline, Content, Source, Category... -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Update</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        <!-- CHANGE: JS inline cho trigger Modal (Bootstrap). -->
+              function createNews() {
+                  $('#createModal').modal('show');  // Show Modal Create.
+              }
+              function editNews(id) {
+                  // CHANGE: Load data vào Modal Edit (AJAX GET /News/Edit/{id} nếu cần, tạm alert id).
+                  $('#editId').val(id);
+                  // Load other fields via AJAX or hardcode tạm.
+                  $('#editModal').modal('show');  // Show Modal Edit.
+              }
+    </script>
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+      <!-- CHANGE: Validation JS. -->
+}

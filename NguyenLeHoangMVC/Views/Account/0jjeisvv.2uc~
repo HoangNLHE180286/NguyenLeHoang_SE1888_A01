@@ -1,0 +1,241 @@
+﻿@model IEnumerable<NguyenLeHoangMVC_DataLayer.Models.SystemAccount>
+
+@{
+    ViewData["Title"] = "Account Management";
+}
+
+<h2>Account Management</h2>
+
+<form asp-action="AccountManagement" method="get">
+    <input type="text" name="searchString" placeholder="Search by Name or Email..." value="@ViewBag.CurrentFilter" />
+    <button type="submit" class="btn btn-primary">Search</button>
+    <a asp-action="AccountManagement" class="btn btn-secondary" style="margin-left: 10px; padding: 5px 10px;">Clear</a>
+</form>
+
+@if (Model != null && Model.Any()) {
+    <table style="border-collapse: collapse; width: 100%; margin-top: 20px;">
+        <thead>
+            <tr style="background-color: #f2f2f2;">
+                <th style="border: 1px solid #ddd; padding: 8px;">ID</th>
+                <th style="border: 1px solid #ddd; padding: 8px;">Name</th>
+                <th style="border: 1px solid #ddd; padding: 8px;">Email</th>
+                <th style="border: 1px solid #ddd; padding: 8px;">Role</th>
+                <th style="border: 1px solid #ddd; padding: 8px;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var acc in Model) {
+                <tr>
+                    <td style="border: 1px solid #ddd; padding: 8px;">@acc.AccountId</td>
+                    <td style="border: 1px solid #ddd; padding: 8px;">@acc.AccountName</td>
+                    <td style="border: 1px solid #ddd; padding: 8px;">@acc.AccountEmail</td>
+                    <td style="border: 1px solid #ddd; padding: 8px;">
+                        @acc.AccountRole (@(ViewBag.RoleNames != null ? ViewBag.RoleNames[acc.AccountRole ?? 0] : "Unknown"))
+                    </td>
+                    <td style="border: 1px solid #ddd; padding: 8px;">
+                        <button onclick="openUpdateModal(@acc.AccountId)" style="color:blue; border: none; background: none; cursor: pointer; text-decoration: underline;">
+                            Update
+                        </button> |
+                        <button onclick="confirmDelete(@acc.AccountId)" style="color:red; border: none; background: none; cursor: pointer; text-decoration: underline;">
+                            Delete
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <button onclick="openCreateModal()" style="margin-top: 10px; padding: 5px 10px; background-color: #007bff; color: white; border: none; cursor: pointer;">
+        Create New
+        </button>
+} else {
+    <p>No accounts found.</p>
+}
+
+<a asp-controller="Home" asp-action="Index" style="margin-top: 10px; display: inline-block; padding: 5px 10px; background-color: #6c757d; color: white; text-decoration: none;">
+    Back to Home
+</a>
+
+@section Scripts {
+    <script>
+        // swal: success/error toast
+        @if (TempData["Success"] != null) {
+                <text>
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: '@TempData["Success"]',
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3000,
+                        timerProgressBar: true
+                    });
+                </text>
+        }
+        @if (TempData["Error"] != null) {
+                <text>
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error!',
+                        text: '@TempData["Error"]',
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3000,
+                        timerProgressBar: true
+                    });
+                </text>
+        }
+
+        // swal: popup form modal for create
+        function openCreateModal() {
+            Swal.fire({
+                title: 'Create New Account',
+                html: `
+                    <form id="createForm">
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label>Name</label>
+                            <input type="text" name="AccountName" class="swal2-input" required />
+                        </div>
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label>Email</label>
+                            <input type="email" name="AccountEmail" class="swal2-input" required />
+                        </div>
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label>Password</label>
+                            <input type="password" name="AccountPassword" class="swal2-input" required />
+                        </div>
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label>Role</label>
+                            <select name="AccountRole" class="swal2-select" required>
+                                <option value="">Select Role</option>
+                                <option value="1">Staff</option>
+                                <option value="2">Lecturer</option>
+                            </select>
+                        </div>
+                    </form>
+                `,
+                focusConfirm: false,
+                showCancelButton: true,
+                confirmButtonText: 'Create',
+                cancelButtonText: 'Cancel',
+                preConfirm: () => {
+                    const form = document.getElementById('createForm');
+                    const formData = new FormData(form);
+                    if (!form.checkValidity()) {
+                        form.reportValidity();
+                        return false;
+                    }
+                    return fetch('/Account/Create', {
+                        method: 'POST',
+                        body: formData
+                    }).then(response => {
+                        if (!response.ok) {
+                            throw new Error(response.statusText);
+                        }
+                        return response.json();
+                    }).catch(error => {
+                        Swal.showValidationMessage(`Request failed: ${error}`);
+                    });
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    location.reload();  // reload after success
+                }
+            });
+        }
+
+        // swal: popup form modal for update
+        function openUpdateModal(id) {
+            fetch('/Account/GetAccountJson/' + id)  
+                .then(response => response.json())
+                .then(data => {
+                    Swal.fire({
+                        title: 'Update Account',
+                        html: `
+                            <form id="updateForm">
+                                <input type="hidden" name="AccountId" value="${data.accountId}" />
+                                <div class="form-group" style="margin-bottom: 15px;">
+                                    <label>Name</label>
+                                    <input type="text" name="AccountName" class="swal2-input" value="${data.accountName || ''}" required />
+                                </div>
+                                <div class="form-group" style="margin-bottom: 15px;">
+                                    <label>Email</label>
+                                    <input type="email" name="AccountEmail" class="swal2-input" value="${data.accountEmail || ''}" required />
+                                </div>
+                                <div class="form-group" style="margin-bottom: 15px;">
+                                    <label>Password</label>
+                                    <input type="password" name="AccountPassword" class="swal2-input" value="${data.accountPassword || ''}" />
+                                </div>
+                                <div class="form-group" style="margin-bottom: 15px;">
+                                    <label>Role</label>
+                                    <select name="AccountRole" class="swal2-select" required>
+                                        <option value="">Select Role</option>
+                                        <option value="1" ${data.accountRole == 1 ? 'selected' : ''}>Staff</option>
+                                        <option value="2" ${data.accountRole == 2 ? 'selected' : ''}>Lecturer</option>
+                                    </select>
+                                </div>
+                            </form>
+                        `,
+                        focusConfirm: false,
+                        showCancelButton: true,
+                        confirmButtonText: 'Update',
+                        cancelButtonText: 'Cancel',
+                        preConfirm: () => {
+                            const form = document.getElementById('updateForm');
+                            const formData = new FormData(form);
+                            if (!form.checkValidity()) {
+                                form.reportValidity();
+                                return false;
+                            }
+                            return fetch('/Account/Update/' + id, {
+                                method: 'POST',
+                                body: formData
+                            }).then(response => {
+                                if (!response.ok) {
+                                    throw new Error(response.statusText);
+                                }
+                                return response.json();
+                            }).catch(error => {
+                                Swal.showValidationMessage(`Request failed: ${error}`);
+                            });
+                        }
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            location.reload();  // reload after success
+                        }
+                    });
+                });
+        }
+
+        // swal: popup modal for delete
+        function confirmDelete(id) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch('/Account/Delete/' + id, {
+                        method: 'POST'
+                    }).then(response => {
+                        if (response.ok) {
+                            location.reload();  // Reload page sau delete (toast show từ Layout).
+                        } else {
+                            Swal.fire('Error!', 'Delete failed.', 'error');
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+      <!-- CHANGE: Validation JS. -->
+}

@@ -1,0 +1,45 @@
+﻿@model IEnumerable<NguyenLeHoangMVC_DataLayer.Models.NewsArticle>  
+<!-- CHANGE: Model cho list news (khớp namespace Models). -->
+
+@using System.Linq  
+<!-- CHANGE: Thêm using System.Linq để fix lỗi RuntimeBinderException (.Any() từ LINQ). -->
+
+@{
+    ViewData["Title"] = "Home Page";  <!-- CHANGE: Giữ title tiếng Anh chuẩn template. -->
+}
+
+<h1>Active News Articles</h1>  <!-- CHANGE: Tiêu đề tiếng Anh (không auth). -->
+<div class="table-responsive">  <!-- CHANGE: Thêm Bootstrap responsive để table gọn trên mobile (không CSS lẻ). -->
+    <table style="border-collapse: collapse; width: 100%; margin-top: 20px;">
+        <thead>
+            <tr style="background-color: #f2f2f2;">
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Title</th>  <!-- CHANGE: Sửa header tiếng Anh (từ Tiêu Đề). -->
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Headline</th>  <!-- CHANGE: Sửa header tiếng Anh (từ Tiêu Đề Phụ). -->
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Content Summary</th>  <!-- CHANGE: Thêm cột NewsContent (tóm tắt, giới hạn 100 ký tự để gọn). -->
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Source</th>  <!-- CHANGE: Thêm cột NewsSource (thông tin cần thiết từ Models). -->
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Category</th>  <!-- CHANGE: Thêm cột CategoryName (navigation từ Models, nếu null thì "N/A"). -->
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Created Date</th>  <!-- CHANGE: Sửa header tiếng Anh (từ Ngày Tạo). -->
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var news in Model) {
+                <tr>
+                    <td style="border: 1px solid #ddd; padding: 8px;">@news.NewsTitle</td>  <!-- CHANGE: Hiển thị NewsTitle (string? từ Models). -->
+                    <td style="border: 1px solid #ddd; padding: 8px;">@news.Headline</td>  <!-- CHANGE: Hiển thị Headline (string từ Models). -->
+                    <td style="border: 1px solid #ddd; padding: 8px;">@(news.NewsContent != null && news.NewsContent.Length > 100 ? news.NewsContent.Substring(0, 100) + "..." : news.NewsContent ?? "N/A")</td>  <!-- CHANGE: Fix null check trước Length (tránh NullReference), thêm "N/A" nếu null. -->
+                    <td style="border: 1px solid #ddd; padding: 8px;">@news.NewsSource</td>  <!-- CHANGE: Hiển thị NewsSource (string? từ Models). -->
+                    <td style="border: 1px solid #ddd; padding: 8px;">@(news.Category?.CategoryName ?? "N/A")</td>  <!-- CHANGE: Hiển thị CategoryName (join navigation từ Models, nếu null "N/A"). -->
+                    <td style="border: 1px solid #ddd; padding: 8px;">@news.CreatedDate?.ToString("MM/dd/yyyy")</td>  <!-- CHANGE: Hiển thị CreatedDate (DateTime? từ Models, format tiếng Anh). -->
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+@if (Model == null || !Model.Any()) {
+    <p style="color: #6c757d; margin-top: 20px;">No active news articles available.</p>  <!-- CHANGE: Fix if condition (Model == null || !Any() để tránh lỗi nếu Model null). -->
+}
+
+<!-- CHANGE: Hiển thị session nếu login (từ menu Layout, không lặp message success). Inline style. -->
+@if (Context.Session.GetString("UserEmail") != null) {
+    <p style="color: blue; margin-top: 20px; font-weight: bold;">Logged in as: @Context.Session.GetString("UserEmail")</p>  <!-- CHANGE: Info session tiếng Anh. -->
+}

@@ -1,0 +1,51 @@
+﻿@model IEnumerable<NguyenLeHoangMVC_DataLayer.Models.NewsArticle>  
+<!-- CHANGE: Model cho list news (khớp namespace Models). -->
+
+@{
+    ViewData["Title"] = "News Management";
+}
+
+<h2>News Management</h2>  <!-- CHANGE: Tiêu đề tương tự AccountManagement. -->
+@if (TempData["Success"] != null) {  <!-- CHANGE: Hiển thị success message từ Create/Update/Delete (tương tự Account). -->
+    <p style="color: green;">@TempData["Success"]</p>
+}
+@if (TempData["Error"] != null) {  <!-- CHANGE: Hiển thị error nếu role sai. -->
+    <p style="color: red;">@TempData["Error"]</p>
+}
+<form asp-action="NewsManagement" method="get">  <!-- CHANGE: Form search theo Title, action NewsManagement. -->
+    <input type="text" name="searchString" placeholder="Search by Title..." value="@ViewBag.CurrentFilter" />  <!-- CHANGE: Giữ filter nếu có. -->
+    <button type="submit">Search</button>
+</form>
+@if (Model != null && Model.Any()) {
+    <table style="border-collapse: collapse; width: 100%; margin-top: 20px;">  <!-- CHANGE: Table tương tự ReadNews, thêm Action cột. -->
+        <thead>
+            <tr style="background-color: #f2f2f2;">
+                <th style="border: 1px solid #ddd; padding: 8px;">Title</th>
+                <th style="border: 1px solid #ddd; padding: 8px;">Headline</th>
+                <th style="border: 1px solid #ddd; padding: 8px;">Status</th>
+                <th style="border: 1px solid #ddd; padding: 8px;">Created Date</th>  <!-- CHANGE: Thêm cột Date (sort descending). -->
+                <th style="border: 1px solid #ddd; padding: 8px;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var news in Model) {
+                <tr>
+                    <td style="border: 1px solid #ddd; padding: 8px;">@news.NewsTitle</td>
+                    <td style="border: 1px solid #ddd; padding: 8px;">@news.Headline</td>
+                    <td style="border: 1px solid #ddd; padding: 8px;">@(news.NewsStatus == true ? "Active" : "Inactive")</td>
+                    <td style="border: 1px solid #ddd; padding: 8px;">@news.CreatedDate?.ToString("MM/dd/yyyy")</td>  <!-- CHANGE: Hiển thị Date. -->
+                    <td style="border: 1px solid #ddd; padding: 8px;">
+                        <a asp-action="Edit" asp-route-id="@news.NewsArticleId" style="color:blue;">Edit</a> | 
+                        <form asp-action="Delete" asp-route-id="@news.NewsArticleId" method="post" style="display: inline;" onsubmit="return confirm('Are you sure?');">  <!-- CHANGE: Confirm JS cho Delete. -->
+                            <button type="submit" style="color:red; border: none; background: none;">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <a asp-action="Create" style="margin-top: 10px; display: inline-block; padding: 5px 10px; background-color: #007bff; color: white; text-decoration: none;">Create New</a>  <!-- CHANGE: Button Create tương tự Account. -->
+} else {
+    <p>No news articles found.</p>
+}
+<a asp-controller="Home" asp-action="Index" style="margin-top: 10px; display: inline-block; padding: 5px 10px; background-color: #6c757d; color: white; text-decoration: none;">Back to Home</a>  <!-- CHANGE: Link về Home tương tự AccountManagement. -->

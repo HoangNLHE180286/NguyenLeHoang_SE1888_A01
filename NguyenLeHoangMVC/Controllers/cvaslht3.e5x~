@@ -1,0 +1,31 @@
+﻿using System.Diagnostics;
+using Microsoft.AspNetCore.Mvc;
+using NguyenLeHoangMVC_DataLayer.Models;
+using NguyenLeHoangMVC_BusinessLayer.Services;  // CHANGE: Import cho INewsService (dùng DI cho query news không auth).
+
+namespace NguyenLeHoangMVC.Controllers {
+    public class HomeController : Controller {
+        private readonly ILogger<HomeController> _logger;
+        private readonly INewsService _newsService;  // CHANGE: Inject INewsService (Scoped từ Program.cs).
+
+        public HomeController(ILogger<HomeController> logger, INewsService newsService)  // CHANGE: Thêm param newsService cho DI.
+        {
+            _logger = logger;
+            _newsService = newsService;  // CHANGE: Khởi tạo field cho Service.
+        }
+
+        public async Task<IActionResult> Index()  // CHANGE: Đổi thành async Task<IActionResult> để await Service.
+        {
+            // CHANGE: Lấy news active (không auth, theo đề). Truyền model sang View (IEnumerable<NewsArticle>).
+            var activeNews = await _newsService.GetActiveNewsAsync();
+            return View(activeNews);
+        }
+
+        // CHANGE: Loại bỏ Privacy action (theo yêu cầu, không cần trang Privacy).
+
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        public IActionResult Error() {
+            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        }
+    }
+}

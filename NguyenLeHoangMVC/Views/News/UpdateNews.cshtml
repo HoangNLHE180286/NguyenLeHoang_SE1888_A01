@@ -1,0 +1,53 @@
+﻿@model NguyenLeHoangMVC_DataLayer.Models.NewsArticle
+
+@{
+    ViewData["Title"] = "Edit News";
+    <!-- CHANGE: Title Edit (từ Create). -->
+}
+
+<h2>Edit News Article</h2>
+<form asp-action="Edit" method="post">
+    <!-- CHANGE: Action Edit (từ Create). -->
+    <input asp-for="NewsArticleId" type="hidden" />  <!-- CHANGE: Hidden PK cho update (NewsArticleId string từ Models). -->
+    <div class="form-group">
+        <label asp-for="NewsTitle" class="control-label">Title</label>
+        <input asp-for="NewsTitle" class="form-control" required />  <!-- CHANGE: Required validation. -->
+        <span asp-validation-for="NewsTitle" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Headline" class="control-label">Headline</label>
+        <input asp-for="Headline" class="form-control" required />
+        <span asp-validation-for="Headline" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="NewsContent" class="control-label">Content</label>
+        <textarea asp-for="NewsContent" class="form-control"></textarea>
+        <span asp-validation-for="NewsContent" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="NewsSource" class="control-label">Source</label>
+        <input asp-for="NewsSource" class="form-control" />
+        <span asp-validation-for="NewsSource" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="CategoryId" class="control-label">Category</label>
+        <select asp-for="CategoryId" class="form-control" required>
+            <option value="">Select Category</option>
+            @foreach (var cat in ViewBag.Categories as IEnumerable<NguyenLeHoangMVC_DataLayer.Models.Category>) {
+                <!-- CHANGE: Loop từ ViewBag, selected nếu match. -->
+                <option value="@cat.CategoryId" selected="@(Model?.CategoryId == cat.CategoryId ? "selected" : null)">@cat.CategoryName</option>
+            }
+        </select>
+        <span asp-validation-for="CategoryId" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <input type="submit" value="Update" class="btn btn-primary" />  <!-- CHANGE: Submit Update (từ Create). -->
+    </div>
+</form>
+<a asp-action="Index">Back to List</a>  <!-- CHANGE: Link về Index. -->
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+      <!-- CHANGE: Validation JS từ Bootstrap. -->
+}

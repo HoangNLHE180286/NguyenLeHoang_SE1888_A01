@@ -1,0 +1,46 @@
+﻿@model NguyenLeHoangMVC_DataLayer.Models.SystemAccount
+
+@{
+    ViewData["Title"] = "Create Account";
+}
+
+<h2>Create New Account</h2>
+<form asp-action="Create" method="post">
+    <div class="form-group" style="margin-bottom: 15px;">
+        <label asp-for="AccountName" class="control-label">Name</label>
+        <input asp-for="AccountName" class="form-control" required style="width: 300px;" />
+        <span asp-validation-for="AccountName" class="text-danger" style="color: red;"></span>
+    </div>
+    <div class="form-group" style="margin-bottom: 15px;">
+        <label asp-for="AccountEmail" class="control-label">Email</label>
+        <input asp-for="AccountEmail" class="form-control" type="email" required style="width: 300px;" />
+        <span asp-validation-for="AccountEmail" class="text-danger" style="color: red;"></span>
+    </div>
+    <div class="form-group" style="margin-bottom: 15px;">
+        <label asp-for="AccountPassword" class="control-label">Password</label>
+        <input asp-for="AccountPassword" class="form-control" type="password" required style="width: 300px;" />
+        <span asp-validation-for="AccountPassword" class="text-danger" style="color: red;"></span>
+    </div>
+    <div class="form-group" style="margin-bottom: 15px;">
+        <label asp-for="AccountRole" class="control-label">Role</label>
+        <select asp-for="AccountRole" class="form-control" required style="width: 300px;">
+            <option value="">Select Role</option>
+            <option value="1">Staff</option>
+            <option value="2">Lecturer</option>
+        </select>
+        <span asp-validation-for="AccountRole" class="text-danger" style="color: red;"></span>
+    </div>
+    <div class="form-group">
+        <input type="submit" value="Create" class="btn btn-primary" style="padding: 5px 10px;" />
+    </div>
+</form>
+
+<a asp-action="AccountManagement" style="margin-top: 10px; display: inline-block; padding: 5px 10px; background-color: #6c757d; color: white; text-decoration: none;">
+    Back to List
+</a>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

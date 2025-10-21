@@ -1,0 +1,125 @@
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
+using NguyenLeHoangMVC_BusinessLayer.Services;
+using NguyenLeHoangMVC_DataLayer.Models;
+
+namespace NguyenLeHoangMVC.Controllers;
+
+public class AccountController : Controller {
+    private readonly IAdminService _adminService;
+
+    public AccountController(IAdminService adminService) {
+        _adminService = adminService;
+    }
+
+    public IActionResult Login() {
+        // if logged in, redirect to Home
+        if (HttpContext.Session.GetString("UserEmail") != null) {
+            return RedirectToAction("Index", "Home");
+        }
+        return View();  // else redirect to login page
+    }
+
+    [HttpPost]
+    public IActionResult Logout() {
+        HttpContext.Session.Clear();
+        return RedirectToAction("Login");
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Login(string email, string password) {
+        // CHANGE: Thêm validation cơ bản (theo đề: validate data type for all fields). Kiểm tra null/empty.
+        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password)) {
+            TempData["Error"] = "Email and password cannot be empty!";  // CHANGE: Ngôn ngữ Anh (từ "Email và password không được để trống!").
+            return View();
+        }
+
+        var account = await _adminService.AuthenticateAsync(email, password);
+        if (account != null) {
+            // CHANGE: Lưu session cho auth/role (dùng sau để check role: Staff=1, Lecturer=2, Admin=0).
+            // Lưu email và role để redirect có thể dùng (không dùng TempData vì mất sau redirect).
+            // Thêm check null cho AccountRole để tránh lỗi nếu property null (theo scaffold: int?).
+            HttpContext.Session.SetString("UserEmail", email);
+            int role = account.AccountRole ?? 0;  // CHANGE: Extract role trước để tránh null reference (khớp Models: int?).
+            HttpContext.Session.SetInt32("UserRole", role);
+            // CHANGE: Bỏ TempData["Success"] (fix bug show message không cần sau redirect, theo yêu cầu: chỉ báo lỗi sai thông tin).
+            // CHANGE: Luôn redirect về Home sau login thành công (bỏ role-based tạm, theo yêu cầu).
+            return RedirectToAction("Index", "Home");
+        }
+        TempData["Error"] = "Invalid email or password!";  // CHANGE: Ngôn ngữ Anh (từ "Email hoặc password sai!").
+        return View();
+    }
+
+    // CHANGE: Action AccountManagement: List all accounts (Admin role=0), với search theo Email (LINQ Where). Role check.
+    public async Task<IActionResult> AccountManagement(string searchString) {
+        if (HttpContext.Session.GetInt32("UserRole") != 0) {
+            TempData["Error"] = "You do not have permission to access this page!";  // CHANGE: Ngôn ngữ Anh (từ "Bạn không có quyền...").
+            return RedirectToAction("Index", "Home");
+        }
+        var allAccounts = await _adminService.GetAllAccountsAsync();  // CHANGE: Query all accounts.
+        if (!string.IsNullOrEmpty(searchString)) {
+            allAccounts = allAccounts.Where(a => a.AccountEmail.Contains(searchString));  // CHANGE: LINQ search theo Email.
+        }
+        allAccounts = allAccounts.OrderByDescending(a => a.AccountId);  // CHANGE: Sort descending ID (fix bug "loạn xạ", mặc định theo ID mới nhất).
+        return View(allAccounts);  // Truyền model sang View AccountManagement.cshtml.
+    }
+
+    // CHANGE: Action Create: Hiển thị form tạo account mới (Admin role=0), validation, insert qua Service.
+    [HttpGet]
+    public IActionResult Create() {
+        if (HttpContext.Session.GetInt32("UserRole") != 0) {
+            return Unauthorized();
+        }
+        return View();  // View CreateAccount.cshtml với form (AccountEmail required, etc.).
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Create(SystemAccount model) {  // CHANGE: Model binding từ form, validation.
+        if (HttpContext.Session.GetInt32("UserRole") != 0) {
+            return Unauthorized();
+        }
+        if (!ModelState.IsValid) {  // CHANGE: Validation theo đề (required fields như AccountEmail).
+            return View(model);
+        }
+        await _adminService.CreateAccountAsync(model);  // CHANGE: Insert qua Service.
+        TempData["Success"] = "Account created successfully!";  // CHANGE: Ngôn ngữ Anh (từ "Tạo account thành công!").
+        return RedirectToAction("AccountManagement");
+    }
+
+    // CHANGE: Action Edit: Load account by ID (Admin role=0), form update.
+    [HttpGet]
+    public async Task<IActionResult> Edit(short id) {  // PK AccountId short.
+        if (HttpContext.Session.GetInt32("UserRole") != 0) {
+            return Unauthorized();
+        }
+        var account = await _adminService.GetAccountByIdAsync(id);  // CHANGE: Load qua Service.
+        if (account == null) {
+            return NotFound();
+        }
+        return View(account);  // View EditAccount.cshtml.
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Edit(short id, SystemAccount model) {
+        if (HttpContext.Session.GetInt32("UserRole") != 0) {
+            return Unauthorized();
+        }
+        if (id != model.AccountId || !ModelState.IsValid) {
+            return View(model);
+        }
+        await _adminService.UpdateAccountAsync(model);  // CHANGE: Update qua Service.
+        TempData["Success"] = "Account updated successfully!";  // CHANGE: Ngôn ngữ Anh (từ "Cập nhật account thành công!").
+        return RedirectToAction("AccountManagement");
+    }
+
+    // CHANGE: Action Delete: Confirm dialog (JS), delete qua Service (Admin role=0).
+    [HttpPost]
+    public async Task<IActionResult> Delete(short id) {
+        if (HttpContext.Session.GetInt32("UserRole") != 0) {
+            return Unauthorized();
+        }
+        await _adminService.DeleteAccountAsync(id);  // CHANGE: Delete qua Service (check FK nếu cần).
+        TempData["Success"] = "Account deleted successfully!";  // CHANGE: Ngôn ngữ Anh (từ "Xóa account thành công!").
+        return RedirectToAction("AccountManagement");
+    }
+}
